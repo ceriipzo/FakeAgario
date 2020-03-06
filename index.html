@@ -1,0 +1,265 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Tarea 4 Javascript Escenario</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            background-color: deepskyblue;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+
+    var config = {
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 },
+                debug: false
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update,
+        }
+    };
+
+    var player;
+    var stars;
+    //var platforms;
+    var cursors;
+    var score = 0;
+    var scoreText;
+    var scale = 1.1;
+    var vel = 12;
+    
+    var graphics;
+    var text;
+    var moveCam = false;
+
+    var iter = 0;//
+    var tilesprites = [];
+
+    var game = new Phaser.Game(config);
+    let fullscreen = this.add.image(16,16,'fullscreen').setInteractive()
+    fullscreen.on('pointerup',()=>{window['game']['canvas'][game.device.fullscreen.request]();})
+
+
+    function preload ()
+    {
+        this.load.image('sky', 'assets/milkway.png');
+        // this.load.image('ground', 'assets/platform.png');
+        this.load.image('star', 'assets/estrella.png');
+        this.load.spritesheet('dude', 'assets/sol.png', { frameWidth: 48, frameHeight: 48 });
+        this.load.backgroundColor='gray';
+        
+    }
+
+function create ()
+    {
+        
+        this.cameras.main.setBounds(0, 0, 3200, 1920);
+       
+
+        var frames = ['a'];
+        for (var i = 0; i < frames.length; ++i) 
+        {
+            tilesprites[i] = this.add.tileSprite(i * 0, 0, 3840, 2160, 'sky', frames[i]);
+            tilesprites[i].setOrigin(0)
+        }
+        player = this.physics.add.sprite(40, 40, 'dude');
+        this.cameras.main.startFollow(player, true);
+        this.cameras.main.setZoom(0.5);
+        this.anims.create({
+            key: 'turn',
+            frames: [ { key: 'dude', frame: 0 } ],
+            frameRate: 0
+        });
+        cursors = this.input.keyboard.createCursorKeys();
+        stars = this.physics.add.group({      
+            key: 'star',
+            repeat: Math.floor((Math.random() * 6) +1 ),
+            setXY: { x: 17, y:Math.floor((Math.random() * 600) + 1)+200, stepX:  Math.floor(Math.random()*95) } 
+        });
+        bombs = this.physics.add.group();
+        this.physics.add.overlap(player, stars, collectStar, null, this);
+        this.input.on('pointermove', function (pointer) {
+        player.x = pointer.x;
+        player.y = pointer.y;
+        player.setVelocityX(vel);
+    
+        });
+
+    }
+
+
+    function update ()
+    {
+
+        var x = 0.5;
+
+        for (var i = 0; i < tilesprites.length; ++i) 
+        {
+            tilesprites[i].tilePositionX += x;
+            tilesprites[i].tilePositionY += x;
+        }
+
+        iter += 0.01;
+
+        if (cursors.left.isDown)
+        {
+            //player.setVelocityX(-160);
+
+            //player.anims.play('left', true);
+        }
+        else if (cursors.right.isDown)
+        {
+            //player.setVelocityX(160);
+
+            //player.anims.play('right', true);
+        }
+        else
+        {
+            player.setVelocityX(0);
+
+            player.anims.play('turn');
+        }
+
+        if (cursors.up.isDown && player.body.touching.down)
+        {
+            player.setVelocityY(-420);
+        }
+
+         if (cursors.right.isDown){
+            player.x += vel;
+
+            if(player.x === 0,0,0,1)
+            {
+                player.x = Phaser.Math.Wrap(player.x - 1, 0, 3200);
+            }
+        }
+        else if (cursors.left.isDown)
+        {
+            player.x -= vel;
+            if(player.x === 0,0,0,1)
+            {
+                player.x = Phaser.Math.Wrap(player.x + 1, 0, 3200);
+            }
+        }
+        else if (cursors.up.isDown)
+        {
+            player.y -= vel;
+            if(player.y === 0,0,0,1)
+            {
+                player.y = Phaser.Math.Wrap(player.y - 1, 0, 1920);
+            }
+        }
+        else if (cursors.down.isDown)
+        {
+            player.y += vel;
+            if(player.y === 0,0,0,1920)
+            {
+                player.y = Phaser.Math.Wrap(player.y + 1, 0, 1920);
+            }
+        }
+        else
+    {
+        if (cursors.left.isDown)
+        {
+            player.setVelocityX(-400);
+        }
+        else if (cursors.right.isDown)
+        {
+            player.setVelocityX(400);
+        }
+    
+        if (cursors.up.isDown)
+        {
+            player.setVelocityY(-400);
+        }
+        else if (cursors.down.isDown)
+        {
+            player.setVelocityY(400);
+        }
+    }
+
+    }
+
+    function collectStar (player, star)
+    {
+        star.disableBody(true, true);//crece solo
+
+
+
+        if (stars.countActive(true) === 5 || 7)
+         {
+            stars.children.iterate(function (child) {
+
+            });
+
+            var x = (player.x < 1600) ? Phaser.Math.Between(1600, 3200) : Phaser.Math.Between(0, 1600);
+            var y = (player.y < 960) ? Phaser.Math.Between(960, 1920) : Phaser.Math.Between(0, 960);
+
+            var star = stars.create(x, y, 'star');
+          
+        }
+
+        if (stars.countActive(true) === 3 || 4)
+        {
+            stars.children.iterate(function (child) {
+
+            });
+
+            var x = (player.x < 3200) ? Phaser.Math.Between(260, 3200) : Phaser.Math.Between(0, 3200);
+            var y = (player.y < 1920) ? Phaser.Math.Between(920, 1920) : Phaser.Math.Between(0, 1920);
+            
+            var star = stars.create(x, y, 'star');
+             
+        }
+
+        if (stars.countActive(true) === 0 & 1)
+        {
+            stars.children.iterate(function (child) {
+
+            });
+
+            var x = (player.x < 3200) ? Phaser.Math.Between(260, 3200) : Phaser.Math.Between(0, 3200);
+            var y = (player.y < 1920) ? Phaser.Math.Between(920, 1920) : Phaser.Math.Between(0, 1920);
+            
+            var star = stars.create(x, y, 'star');
+        }
+        
+        player.setScale(scale);
+        vel -= 0.03;
+
+        if(scale <= 9)
+        {
+            scale += 0.03;
+        }
+        else if(scale >= 9)
+        {
+            scale += 0.01;
+        }
+        else if(scale >= 45)
+        {
+            scale = 46;
+        }
+
+        if(vel <= 0.4)
+            {vel = 0.4}
+    }
+
+</script>
+
+</body>
+</html>
